@@ -1,12 +1,7 @@
 namespace escuchify_app.Models;
-
-public class Disco
-{
+public class Cancion {
     public int Id { get; set; }
-    public int ArtistaId { get; set; }
     public string Titulo { get; set; } = string.Empty;
-    public int AnioLanzamiento { get; set; }
+    public string Duracion { get; set; } = string.Empty;
     public string Genero { get; set; } = string.Empty;
-    public List<Cancion> Canciones { get; set; } = new();
-
 }

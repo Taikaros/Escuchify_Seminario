@@ -66,4 +66,28 @@ public async Task<ArtistaDto?> ObtenerPorId(int id)
         }).ToList()
     };
 }
+// Método para BORRAR (Delete)
+public async Task<bool> Borrar(int id)
+{
+    // 1. Buscamos si existe
+    var artista = await _context.Artistas.FindAsync(id);
+    if (artista == null) return false;
+
+    // 2. Lo borramos (EF Core se encarga del SQL)
+    _context.Artistas.Remove(artista);
+    await _context.SaveChangesAsync();
+    return true;
+}
+public async Task<bool> Actualizar(int id, ArtistaDto dto)
+    {
+        var artista = await _context.Artistas.FindAsync(id);
+        if (artista == null) return false;
+
+        artista.Nombre = dto.Nombre;
+        artista.Genero = dto.Genero;
+        artista.ImagenUrl = dto.ImagenUrl;
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
 }

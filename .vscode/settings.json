@@ -1,0 +1,11 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "database": "${workspaceFolder:Escuchify_Seminario}/escuchify_api/escuchify.db",
+            "name": "escuchify"
+        }
+    ],
+    "sqltools.useNodeRuntime": true
+}

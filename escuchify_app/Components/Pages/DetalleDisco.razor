@@ -1,0 +1,153 @@
+@page "/disco/{Id:int}"
+@rendermode InteractiveServer
+@inject escuchify_app.Services.ApiService Api
+@inject IJSRuntime JS
+@inject NavigationManager NavManager
+@using escuchify_app.Components.UI
+
+<div class="p-8 text-white min-h-screen flex flex-col gap-8">
+    <button @onclick="Volver" class="mb-4 flex items-center gap-2 text-slate-400 hover:text-white transition">
+        <span>⬅</span> Volver al Artista
+    </button>
+    @if (disco == null)
+    {
+        <p>Cargando...</p>
+    }
+    else
+    {
+        <div class="flex gap-6 items-end bg-white/5 p-6 rounded-3xl backdrop-blur-md border border-white/10">
+            <div class="w-48 h-48 shadow-2xl rounded-xl overflow-hidden">
+                <ImagenAutomatica Termino="@disco.Titulo" Tipo="album" />
+            </div>
+            <div>
+                <h1 class="text-5xl font-black">@disco.Titulo</h1>
+                <p class="text-xl text-slate-400">@disco.AnioLanzamiento • @disco.Canciones.Count canciones</p>
+            </div>
+        </div>
+
+        <div class="bg-slate-900/50 rounded-2xl p-6">
+            <div class="flex justify-between mb-4">
+                <h3 class="text-2xl font-bold">Lista de Temas</h3>
+
+                <div class="flex gap-2">
+                    <input @bind="nuevaCancion" placeholder="Título"
+                        class="bg-slate-800 rounded px-3 py-1 text-white border border-white/10" />
+                    <input @bind="duracion" placeholder="00:00"
+                        class="w-20 bg-slate-800 rounded px-3 py-1 text-white border border-white/10" />
+                    <button @onclick="Agregar" class="bg-green-600 px-4 rounded font-bold hover:bg-green-500">+</button>
+                </div>
+            </div>
+
+            <table class="w-full text-left">
+                <thead class="text-slate-500 border-b border-white/10">
+                    <tr>
+                        <th class="py-2">#</th>
+                        <th>Título</th>
+                        <th class="text-right">Duración</th>
+                        <th class="w-10"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var (cancion, index) in disco.Canciones.Select((c, i) => (c, i + 1)))
+                    {
+                        @if (cancionEditandoId == cancion.Id)
+                        {
+                            <tr class="bg-slate-800 border border-cyan-500">
+                                <td class="p-2 text-center text-cyan-400">✎</td>
+                                <td class="p-2">
+                                    <input @bind="cancion.Titulo"
+                                        class="bg-slate-900 text-white p-1 rounded w-full border border-slate-600" />
+                                </td>
+                                <td class="p-2 text-right">
+                                    <input @bind="cancion.Duracion"
+                                        class="bg-slate-900 text-white p-1 rounded w-20 text-right border border-slate-600" />
+                                </td>
+                                <td class="p-2 text-right flex gap-2 justify-end">
+                                    <button @onclick="() => GuardarCancion(cancion)"
+                                        class="text-green-500 hover:scale-110">💾</button>
+                                    <button @onclick="CancelarEdicion" class="text-gray-400 hover:scale-110">❌</button>
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            <tr class="hover:bg-white/5 transition border-b border-white/5 group">
+                                <td class="py-3 text-slate-500 w-10 text-center">@index</td>
+                                <td class="font-medium">
+                                    @cancion.Titulo
+                                    <button @onclick="() => EditarCancion(cancion.Id)"
+                                        class="ml-2 text-slate-600 hover:text-cyan-400 opacity-0 group-hover:opacity-100 transition">
+                                        ✏️
+                                    </button>
+                                </td>
+                                <td class="text-right text-slate-400">@cancion.Duracion</td>
+                                <td class="text-right">
+                                    <button @onclick="() => EliminarCancion(cancion)"
+                                        class="text-red-500/50 hover:text-red-500 font-bold hover:scale-110 transition p-2">
+                                        ✕
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    escuchify_app.Models.Disco? disco;
+    string nuevaCancion = "";
+    string duracion = "";
+    int? cancionEditandoId = null;
+    void EditarCancion(int id) => cancionEditandoId = id;
+    void CancelarEdicion() => cancionEditandoId = null;
+
+    void Volver()
+    {
+        // Si el disco sabe quién es su artista, volvemos a ÉL.
+        if (disco != null && disco.ArtistaId > 0)
+        {
+            NavManager.NavigateTo($"/artista/{disco.ArtistaId}");
+        }
+        else
+        {
+            // Solo si falla, vamos al inicio general
+            NavManager.NavigateTo("/artistas");
+        }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        await Cargar();
+    }
+
+    async Task Cargar()
+    {
+        disco = await Api.ObtenerDiscoPorId(Id);
+    }
+
+    async Task Agregar()
+    {
+        if (string.IsNullOrEmpty(nuevaCancion)) return;
+        await Api.AgregarCancion(Id, new escuchify_app.Models.Cancion { Titulo = nuevaCancion, Duracion = duracion });
+        nuevaCancion = "";
+        duracion = "";
+        await Cargar();
+    }
+    async Task EliminarCancion(escuchify_app.Models.Cancion cancion)
+    {
+        bool confirmado = await JS.InvokeAsync<bool>("confirm", $"¿Borrar '{cancion.Titulo}'?");
+        if (confirmado)
+        {
+            await Api.BorrarCancion(cancion.Id);
+            await Cargar();
+        }
+    }
+    async Task GuardarCancion(escuchify_app.Models.Cancion cancion)
+    {
+        await Api.ActualizarCancion(cancion.Id, cancion);
+        cancionEditandoId = null;
+    }
+}

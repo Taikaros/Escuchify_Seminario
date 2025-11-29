@@ -64,4 +64,57 @@ public class ArtistasServiceTests
         Assert.Equal(2, lista.Count); // ¿Hay 2 artistas?
         Assert.Contains(lista, a => a.Nombre == "Bad Bunny"); // ¿Está Bad Bunny?
     }
+    [Fact]
+    public async Task Actualizar_DebeModificarDatos_SiExiste()
+    {
+        // 1. ARRANGE
+        var context = GetDatabaseContext();
+        var artista = new Artista { Nombre = "Viejo Nombre", Genero = "Rock" };
+        context.Artistas.Add(artista);
+        await context.SaveChangesAsync();
+
+        var servicio = new ArtistasService(context);
+        var datosNuevos = new ArtistaDto { Nombre = "Nuevo Nombre", Genero = "Pop" };
+
+        // 2. ACT
+        var resultado = await servicio.Actualizar(artista.Id, datosNuevos);
+
+        // 3. ASSERT
+        Assert.True(resultado); // Debe decir que sí pudo
+        var artistaEnDb = await context.Artistas.FindAsync(artista.Id);
+        Assert.Equal("Nuevo Nombre", artistaEnDb.Nombre); // Verificamos el cambio
+    }
+
+    [Fact]
+    public async Task Borrar_DebeEliminarArtista_YRetornarTrue()
+    {
+        // 1. ARRANGE
+        var context = GetDatabaseContext();
+        var artista = new Artista { Nombre = "Artista a Borrar" };
+        context.Artistas.Add(artista);
+        await context.SaveChangesAsync();
+
+        var servicio = new ArtistasService(context);
+
+        // 2. ACT
+        var resultado = await servicio.Borrar(artista.Id);
+
+        // 3. ASSERT
+        Assert.True(resultado);
+        Assert.Equal(0, await context.Artistas.CountAsync()); // La tabla debe estar vacía
+    }
+
+    [Fact]
+    public async Task Borrar_DebeRetornarFalse_SiNoExiste()
+    {
+        // 1. ARRANGE
+        var context = GetDatabaseContext();
+        var servicio = new ArtistasService(context);
+
+        // 2. ACT (Intentamos borrar el ID 999 que no existe)
+        var resultado = await servicio.Borrar(999);
+
+        // 3. ASSERT
+        Assert.False(resultado); // Debe avisar que falló
+    }
 }

@@ -1,11 +1,9 @@
 namespace escuchify_api.DTOs;
 
-public class DiscoDto
+public class CancionDto
 {
     public int Id { get; set; }
-    public int ArtistaId { get; set; }
     public string Titulo { get; set; } = string.Empty;
-    public int AnioLanzamiento { get; set; }
+    public string Duracion { get; set; } = string.Empty;
     public string Genero { get; set; } = string.Empty;
-    public List<CancionDto> Canciones {get; set;} =  new();
 }

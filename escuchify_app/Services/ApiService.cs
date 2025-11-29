@@ -15,7 +15,7 @@ public class ApiService
     // --- ARTISTAS ---
     public async Task<List<Artista>> ObtenerArtistas()
     {
-        try 
+        try
         {
             // OJO: "api/artistas" debe coincidir con tu Controller en la API
             var respuesta = await _http.GetFromJsonAsync<List<Artista>>("api/artistas");
@@ -34,18 +34,77 @@ public class ApiService
     }
     public async Task<Artista?> ObtenerArtistaPorId(int id)
     {
-    try
-    {
-        return await _http.GetFromJsonAsync<Artista>($"api/artistas/{id}");
-    }
-    catch
-    {
-        return null;
-    }
+        try
+        {
+            return await _http.GetFromJsonAsync<Artista>($"api/artistas/{id}");
+        }
+        catch
+        {
+            return null;
+        }
     }
     public async Task CrearDisco(int artistaId, Disco disco)
     {
-    // Enviamos el disco a la ruta: api/discos/{id del artista}
-    await _http.PostAsJsonAsync($"api/discos/{artistaId}", disco);
+        // Enviamos el disco a la ruta: api/discos/{id del artista}
+        await _http.PostAsJsonAsync($"api/discos/{artistaId}", disco);
+    }
+    public async Task BorrarArtista(int id)
+    {
+        await _http.DeleteAsync($"api/artistas/{id}");
+    }
+    // Obtener un disco con sus canciones
+    public async Task<Disco?> ObtenerDiscoPorId(int id)
+    {
+        try
+        {
+            // Necesitarás crear este endpoint en DiscosController si no existe
+            // O usar el include en el backend
+            return await _http.GetFromJsonAsync<Disco>($"api/discos/{id}");
+        }
+        catch { return null; }
+    }
+
+    public async Task AgregarCancion(int discoId, Cancion cancion)
+    {
+        await _http.PostAsJsonAsync($"api/discos/{discoId}/canciones", cancion);
+    }
+    public async Task BorrarCancion(int id)
+    {
+        await _http.DeleteAsync($"api/discos/cancion/{id}");
+    }
+    public async Task BorrarDisco(int id)
+    {
+        await _http.DeleteAsync($"api/discos/{id}");
+    }
+    public async Task ActualizarArtista(int id, Artista artista)
+    {
+        await _http.PutAsJsonAsync($"api/artistas/{id}", artista);
+    }
+    public async Task ActualizarDisco(int id, escuchify_app.Models.Disco disco)
+    {
+        // TRUCO: Creamos un objeto anónimo SIN la lista de canciones
+        var datosLimpios = new
+        {
+            Id = disco.Id,
+            Titulo = disco.Titulo,
+            AnioLanzamiento = disco.AnioLanzamiento,
+            Genero = disco.Genero
+        };
+
+        await _http.PutAsJsonAsync($"api/discos/{id}", datosLimpios);
+    }
+    public async Task ActualizarCancion(int id, escuchify_app.Models.Cancion cancion)
+    {
+        // TRUCO: Objeto limpio sin relaciones
+        var datosLimpios = new 
+        {
+            Id = cancion.Id,
+            Titulo = cancion.Titulo,
+            Duracion = cancion.Duracion,
+            Genero = cancion.Genero
+        };
+
+        // Asegúrate de que la ruta coincida con tu controlador (api/discos/cancion/{id})
+        await _http.PutAsJsonAsync($"api/discos/cancion/{id}", datosLimpios);
     }
 }

@@ -1,30 +1,30 @@
 @page "/artistas"
 @rendermode InteractiveServer
 @inject escuchify_app.Services.ApiService Api
+@inject IJSRuntime JS
 @using escuchify_app.Models
-@using escuchify_app.Components.UI 
+@using escuchify_app.Components.UI
 
 <div class="p-8 min-h-screen text-white">
-    
+
     <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
         <div>
-            <h1 class="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600 mb-2">
+            <h1
+                class="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600 mb-2">
                 Artistas
             </h1>
             <p class="text-slate-400 text-lg">Tu colección privada.</p>
         </div>
 
         <div class="flex gap-2 bg-slate-800/50 backdrop-blur-md p-2 rounded-xl border border-white/10 shadow-xl">
-            <input @bind="nuevoNombre" 
-                   placeholder="Nombre (ej: Queen)" 
-                   class="bg-transparent outline-none text-white px-4 py-2 placeholder-slate-500 w-48" />
-            
-            <input @bind="nuevoGenero" 
-                   placeholder="Género" 
-                   class="bg-transparent border-l border-white/10 outline-none text-white px-4 py-2 placeholder-slate-500 w-32" />
+            <input @bind="nuevoNombre" placeholder="Nombre (ej: Queen)"
+                class="bg-transparent outline-none text-white px-4 py-2 placeholder-slate-500 w-48" />
 
-            <button @onclick="CrearArtista" 
-                    class="bg-cyan-500 hover:bg-cyan-400 text-black font-bold px-6 py-2 rounded-lg transition-all active:scale-95">
+            <input @bind="nuevoGenero" placeholder="Género"
+                class="bg-transparent border-l border-white/10 outline-none text-white px-4 py-2 placeholder-slate-500 w-32" />
+
+            <button @onclick="CrearArtista"
+                class="bg-cyan-500 hover:bg-cyan-400 text-black font-bold px-6 py-2 rounded-lg transition-all active:scale-95">
                 + Agregar
             </button>
         </div>
@@ -47,13 +47,28 @@
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-8">
             @foreach (var artista in artistas)
             {
-                <a href="/artista/@artista.Id" class="group cursor-pointer">
-                    <div class="aspect-square rounded-2xl overflow-hidden shadow-2xl mb-4 border border-white/5 group-hover:border-cyan-500/50 transition-all duration-300 group-hover:-translate-y-2">
-                        <ImagenAutomatica Termino="@artista.Nombre" Tipo="artista" />
-                    </div>
-                    <h3 class="font-bold text-xl truncate text-slate-100 group-hover:text-cyan-400 transition">@artista.Nombre</h3>
-                    <p class="text-xs text-slate-500 uppercase tracking-widest font-semibold">@artista.Genero</p>
-                </a>
+                <div @key="artista.Id" class="relative group">
+                    <button @onclick="() => Eliminar(artista)"
+                        class="absolute top-2 right-2 z-20 bg-red-600 hover:bg-red-500 text-white p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 transform hover:scale-110"
+                        title="Borrar Artista">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18" />
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                        </svg>
+                    </button>
+                    <a href="/artista/@artista.Id" class="block">
+                        <div
+                            class="aspect-square rounded-2xl overflow-hidden shadow-2xl mb-4 border border-white/5 group-hover:border-cyan-500/50 transition-all duration-300">
+                            <ImagenAutomatica Termino="@artista.Nombre" Tipo="artista" />
+                        </div>
+
+                        <h3 class="font-bold text-xl truncate text-slate-100 group-hover:text-cyan-400 transition">
+                            @artista.Nombre</h3>
+                        <p class="text-xs text-slate-500 uppercase tracking-widest font-semibold">@artista.Genero</p>
+                    </a>
+                </div>
             }
         </div>
     }
@@ -80,10 +95,21 @@
 
         // Enviamos a la API
         await Api.CrearArtista(new Artista { Nombre = nuevoNombre, Genero = nuevoGenero });
-        
+
         // Limpiamos y recargamos
         nuevoNombre = "";
         nuevoGenero = "";
         await CargarDatos();
+    }
+    async Task Eliminar(Models.Artista artista)
+    {
+        // Preguntamos primero para evitar accidentes
+        bool confirmado = await JS.InvokeAsync<bool>("confirm", $"¿Estás seguro de que quieres eliminar a {artista.Nombre}?");
+
+        if (confirmado)
+        {
+            await Api.BorrarArtista(artista.Id);
+            await CargarDatos(); // Recargamos la lista para que desaparezca
+        }
     }
 }
