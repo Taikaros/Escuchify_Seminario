@@ -1,0 +1,89 @@
+@page "/artistas"
+@rendermode InteractiveServer
+@inject escuchify_app.Services.ApiService Api
+@using escuchify_app.Models
+@using escuchify_app.Components.UI 
+
+<div class="p-8 min-h-screen text-white">
+    
+    <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+        <div>
+            <h1 class="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600 mb-2">
+                Artistas
+            </h1>
+            <p class="text-slate-400 text-lg">Tu colección privada.</p>
+        </div>
+
+        <div class="flex gap-2 bg-slate-800/50 backdrop-blur-md p-2 rounded-xl border border-white/10 shadow-xl">
+            <input @bind="nuevoNombre" 
+                   placeholder="Nombre (ej: Queen)" 
+                   class="bg-transparent outline-none text-white px-4 py-2 placeholder-slate-500 w-48" />
+            
+            <input @bind="nuevoGenero" 
+                   placeholder="Género" 
+                   class="bg-transparent border-l border-white/10 outline-none text-white px-4 py-2 placeholder-slate-500 w-32" />
+
+            <button @onclick="CrearArtista" 
+                    class="bg-cyan-500 hover:bg-cyan-400 text-black font-bold px-6 py-2 rounded-lg transition-all active:scale-95">
+                + Agregar
+            </button>
+        </div>
+
+    </div>
+
+    @if (artistas == null)
+    {
+        <div class="text-center mt-20 text-cyan-500 animate-pulse">Cargando datos...</div>
+    }
+    else if (artistas.Count == 0)
+    {
+        <div class="text-center mt-20 p-12 border-2 border-dashed border-slate-700 rounded-3xl text-slate-500">
+            <p class="text-2xl font-bold">Está muy vacío aquí 👻</p>
+            <p>¡Agrega tu primer artista arriba!</p>
+        </div>
+    }
+    else
+    {
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-8">
+            @foreach (var artista in artistas)
+            {
+                <a href="/artista/@artista.Id" class="group cursor-pointer">
+                    <div class="aspect-square rounded-2xl overflow-hidden shadow-2xl mb-4 border border-white/5 group-hover:border-cyan-500/50 transition-all duration-300 group-hover:-translate-y-2">
+                        <ImagenAutomatica Termino="@artista.Nombre" Tipo="artista" />
+                    </div>
+                    <h3 class="font-bold text-xl truncate text-slate-100 group-hover:text-cyan-400 transition">@artista.Nombre</h3>
+                    <p class="text-xs text-slate-500 uppercase tracking-widest font-semibold">@artista.Genero</p>
+                </a>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    List<Artista> artistas;
+    string nuevoNombre = "";
+    string nuevoGenero = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    async Task CargarDatos()
+    {
+        artistas = await Api.ObtenerArtistas();
+    }
+
+    async Task CrearArtista()
+    {
+        if (string.IsNullOrWhiteSpace(nuevoNombre)) return;
+
+        // Enviamos a la API
+        await Api.CrearArtista(new Artista { Nombre = nuevoNombre, Genero = nuevoGenero });
+        
+        // Limpiamos y recargamos
+        nuevoNombre = "";
+        nuevoGenero = "";
+        await CargarDatos();
+    }
+}

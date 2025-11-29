@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using escuchify_api.Data;
-using escuchify_api.Core.Entities;
-using Microsoft.EntityFrameworkCore;
+using escuchify_api.Services;
+using escuchify_api.DTOs;
 
 namespace escuchify_api.Controllers;
 
@@ -9,37 +8,20 @@ namespace escuchify_api.Controllers;
 [ApiController]
 public class DiscosController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    // ESTA PARTE FALTABA (La conexión con el Servicio)
+    private readonly DiscosService _service;
 
-    public DiscosController(AppDbContext context)
+    public DiscosController(DiscosService service)
     {
-        _context = context;
+        _service = service;
     }
+    // -------------------------------------------
 
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Discos>>> GetDiscos()
+    [HttpPost("{artistaId}")]
+    public async Task<IActionResult> Crear(int artistaId, DiscoDto dto)
     {
-        return await _context.Discos.Include(d => d.Canciones).ToListAsync();
+        var exito = await _service.CrearDiscoParaArtista(artistaId, dto);
+        if (!exito) return NotFound("Artista no encontrado");
+        return Ok();
     }
-
-    [HttpGet("{id}")]
-    public async Task<ActionResult<Discos>> GetDisco(int id)
-    {
-        var disco = await _context.Discos
-            .Include(d => d.Canciones)
-            .FirstOrDefaultAsync(d => d.Id == id);
-
-        if (disco == null) return NotFound();
-        return disco;
-    }
-
-    [HttpPost]
-    public async Task<ActionResult<Discos>> PostDisco(Discos disco)
-    {
-        _context.Discos.Add(disco);
-        await _context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetDisco), new { id = disco.Id }, disco);
-    }
-    
-    // Agrega el PUT y DELETE si quieres, siguiendo el ejemplo anterior
 }

@@ -28,4 +28,11 @@ public class ArtistasController : ControllerBase
         var creado = await _service.Crear(dto);
         return Ok(creado);
     }
+    [HttpGet("{id}")]
+    public async Task<ActionResult<ArtistaDto>> Get(int id)
+    {
+    var artista = await _service.ObtenerPorId(id);
+    if (artista == null) return NotFound();
+    return artista;
+    }
 }

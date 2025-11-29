@@ -1,13 +1,11 @@
-namespace escuchify_api.DTOs;
+namespace escuchify_app.Models;
 
-public class ArtistaDto
+public class Artista
 {
     public int Id { get; set; }
     public string Nombre { get; set; } = string.Empty;
     public string Genero { get; set; } = string.Empty;
     public string ImagenUrl { get; set; } = string.Empty;
-
-    
-    // AGREGAR ESTO:
-    public List<DiscoDto> Discos { get; set; } = new();
+    // Si agregaste más propiedades en la API, agrégalas aquí también
+    public List<Disco> Discos { get; set; } = new();
 }

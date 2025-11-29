@@ -1,6 +1,6 @@
 using escuchify_api.Data;
 using escuchify_api.Core.Entities;
-using escuchify_api.Services; // Para ArtistasService
+using escuchify_api.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +17,7 @@ builder.Services.AddControllers();
 
 // 3. Tus Servicios Propios
 builder.Services.AddScoped<ArtistasService>();
+builder.Services.AddScoped<DiscosService>();
 
 // 4. Configuración Extra (Swagger, CORS)
 builder.Services.AddOpenApi();
@@ -39,7 +40,7 @@ using (var scope = app.Services.CreateScope())
     dbContext.Database.Migrate(); 
 }
 
-app.UseCors("AllowAll");
+
 
 if (app.Environment.IsDevelopment())
 {
@@ -47,6 +48,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowAll");
 
 // ESTA LÍNEA ES MAGIA: Busca todos los Controllers y crea las rutas automáticamente
 app.MapControllers(); 

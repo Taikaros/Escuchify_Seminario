@@ -42,4 +42,28 @@ public class ArtistasService
         await _context.SaveChangesAsync();
         return nuevoArtista;
     }
+    // Método para traer un solo artista con sus discos
+public async Task<ArtistaDto?> ObtenerPorId(int id)
+{
+    var artista = await _context.Artistas
+        .Include(a => a.Discos) // <--- ¡MAGIA! Trae los discos relacionados
+        .FirstOrDefaultAsync(a => a.Id == id);
+
+    if (artista == null) return null;
+
+    return new ArtistaDto
+    {
+        Id = artista.Id,
+        Nombre = artista.Nombre,
+        Genero = artista.Genero,
+        ImagenUrl = artista.ImagenUrl,
+        // Convertimos los discos de la BD a DTOs
+        Discos = artista.Discos.Select(d => new DiscoDto {
+            Id = d.Id,
+            Titulo = d.Titulo,
+            AnioLanzamiento = d.AnioLanzamiento,
+            Genero = d.Genero
+        }).ToList()
+    };
+}
 }

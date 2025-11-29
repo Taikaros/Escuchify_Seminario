@@ -1,0 +1,129 @@
+@using System.Text.Json
+@inject IHttpClientFactory ClientFactory
+
+<div class="relative w-full h-full overflow-hidden rounded-xl bg-slate-800 shadow-lg group border border-white/10">
+    
+    <img src="@imagenUrl" 
+         alt="@Termino"
+         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+         style="min-height: 100%; min-width: 100%;"
+         @onerror="PonerSilueta" />
+
+    @if (cargando)
+    {
+        <div class="absolute inset-0 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm z-10">
+            <div class="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(errorMsg))
+    {
+        <div class="absolute inset-0 flex items-center justify-center bg-red-900/90 p-2 text-xs text-white text-center">
+            @errorMsg
+        </div>
+    }
+
+    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+        <span class="text-white text-xs font-bold truncate w-full">@Termino</span>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Termino { get; set; } = "";
+    [Parameter] public string Tipo { get; set; } = "artista";
+
+    private string imagenUrl = "";
+    private bool cargando = true;
+    private string errorMsg = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Placeholder transparente mientras carga
+        imagenUrl = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="; 
+        await BuscarEnDeezer();
+    }
+
+    private async Task BuscarEnDeezer()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(Termino)) 
+            {
+                PonerSilueta();
+                return;
+            }
+
+            // Usamos un cliente HTTP limpio (sin BaseAddress)
+            using var client = new HttpClient();
+            
+            // Construimos la URL de Deezer
+            // Si es artista: busca en /search/artist
+            // Si es disco: busca en /search/album
+            string endpoint = Tipo == "artista" ? "artist" : "album";
+            string url = $"https://api.deezer.com/search/{endpoint}?q={Uri.EscapeDataString(Termino)}&limit=1";
+
+            var respuesta = await client.GetFromJsonAsync<DeezerResult>(url);
+
+            if (respuesta != null && respuesta.data != null && respuesta.data.Count > 0)
+            {
+                // Deezer nos da 'picture_xl' para artistas y 'cover_xl' para discos
+                var item = respuesta.data[0];
+                string mejorImagen = Tipo == "artista" ? item.picture_xl : item.cover_xl;
+
+                // Si no hay XL, probamos la Medium
+                if (string.IsNullOrEmpty(mejorImagen)) 
+                    mejorImagen = Tipo == "artista" ? item.picture_medium : item.cover_medium;
+
+                if (!string.IsNullOrEmpty(mejorImagen))
+                {
+                    imagenUrl = mejorImagen;
+                }
+                else
+                {
+                    PonerSilueta();
+                }
+            }
+            else 
+            {
+                // No se encontraron resultados
+                PonerSilueta();
+            }
+        }
+        catch (Exception ex)
+        {
+            // Si falla, mostramos el error en la tarjetita para saber qué pasó
+            errorMsg = "Err: " + ex.Message; 
+            PonerSilueta();
+        }
+        finally
+        {
+            cargando = false;
+            StateHasChanged();
+        }
+    }
+
+    private void PonerSilueta()
+    {
+        // Siluetas de respaldo
+        if (string.IsNullOrEmpty(imagenUrl) || imagenUrl.StartsWith("data:"))
+        {
+            if (Tipo == "artista")
+                imagenUrl = "https://cdn-icons-png.flaticon.com/512/847/847969.png";
+            else
+                imagenUrl = "https://cdn-icons-png.flaticon.com/512/3202/3202926.png";
+        }
+        cargando = false;
+        StateHasChanged();
+    }
+
+    // Clases para leer el JSON de Deezer
+    public class DeezerResult { 
+        public List<DeezerItem> data { get; set; } 
+    }
+    public class DeezerItem { 
+        public string picture_xl { get; set; }     // Foto HD Artista
+        public string picture_medium { get; set; } // Foto SD Artista
+        public string cover_xl { get; set; }       // Portada HD Disco
+        public string cover_medium { get; set; }   // Portada SD Disco
+    }
+}y
