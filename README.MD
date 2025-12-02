@@ -12,10 +12,10 @@
 
 ## 👥 Integrantes del Grupo: "Codigo Universitario"
 
-* **Integrante 1** - Legajo: XXXXX
-* **Integrante 2** - Legajo: XXXXX
-* **Integrante 3** - Legajo: XXXXX
-* **Integrante 4** - Legajo: XXXXX
+* **Integrante 1** - Cañete Franco Neyen
+* **Integrante 2** - Lang Stephan Emmanuel
+* **Integrante 3** - Morel Garda Lucas
+* **Integrante 4** - Sosa Hugo Alberto Gabriel
 
 ---
 
