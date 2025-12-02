@@ -4,47 +4,67 @@
 @inject IJSRuntime JS
 @inject NavigationManager NavManager
 @using escuchify_app.Components.UI
+@using escuchify_app.Models
 
-<div class="p-8 text-white min-h-screen flex flex-col gap-8">
-    <button @onclick="Volver" class="mb-4 flex items-center gap-2 text-slate-400 hover:text-white transition">
-        <span>⬅</span> Volver al Artista
+<div class="p-8 text-white min-h-screen flex flex-col gap-8 pb-20">
+    
+    <button @onclick="Volver" class="self-start flex items-center gap-2 text-slate-400 hover:text-white transition hover:-translate-x-1 duration-200">
+        <span class="text-xl">⬅</span> Volver al Artista
     </button>
+
     @if (disco == null)
     {
-        <p>Cargando...</p>
+        <p class="text-center mt-20 animate-pulse text-cyan-500 font-bold">Cargando disco...</p>
     }
     else
     {
-        <div class="flex gap-6 items-end bg-white/5 p-6 rounded-3xl backdrop-blur-md border border-white/10">
-            <div class="w-48 h-48 shadow-2xl rounded-xl overflow-hidden">
+        <div class="flex flex-col md:flex-row gap-8 items-end bg-slate-800/50 p-8 rounded-3xl backdrop-blur-md border border-white/10 shadow-2xl">
+            <div class="w-56 h-56 shadow-2xl rounded-2xl overflow-hidden border border-white/10 shrink-0">
                 <ImagenAutomatica Termino="@disco.Titulo" Tipo="album" />
             </div>
-            <div>
-                <h1 class="text-5xl font-black">@disco.Titulo</h1>
-                <p class="text-xl text-slate-400">@disco.AnioLanzamiento • @disco.Canciones.Count canciones</p>
+            <div class="mb-2">
+                <h1 class="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400 mb-2">@disco.Titulo</h1>
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl text-cyan-400 font-bold">@disco.AnioLanzamiento</span>
+                    <span class="text-slate-600 text-2xl">•</span>
+                    <span class="text-lg text-slate-400 uppercase tracking-widest">@disco.Genero</span>
+                </div>
+                <p class="mt-2 text-slate-500 font-mono text-sm">@disco.Canciones.Count pistas</p>
             </div>
         </div>
 
-        <div class="bg-slate-900/50 rounded-2xl p-6">
-            <div class="flex justify-between mb-4">
-                <h3 class="text-2xl font-bold">Lista de Temas</h3>
+        <div class="bg-slate-800/80 p-6 rounded-2xl border border-white/5 shadow-lg">
+            <h3 class="text-lg font-bold mb-4 text-cyan-400 flex items-center gap-2 uppercase tracking-wider">
+                <span>➕</span> Nueva Canción
+            </h3>
+            
+            <EditForm Model="nuevaCancionObj" OnValidSubmit="Agregar" class="flex flex-wrap gap-4 items-start">
+                <DataAnnotationsValidator />
 
-                <div class="flex gap-2">
-                    <input @bind="nuevaCancion" placeholder="Título"
-                        class="bg-slate-800 rounded px-3 py-1 text-white border border-white/10" />
-                    <input @bind="duracion" placeholder="00:00"
-                        class="w-20 bg-slate-800 rounded px-3 py-1 text-white border border-white/10" />
-                    <button @onclick="Agregar" class="bg-green-600 px-4 rounded font-bold hover:bg-green-500">+</button>
+                <div class="flex flex-col">
+                    <InputText @bind-Value="nuevaCancionObj.Titulo" placeholder="Título..." class="bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 text-white outline-none focus:border-cyan-500 w-64 transition-colors" />
+                    <ValidationMessage For="@(() => nuevaCancionObj.Titulo)" class="text-red-400 text-xs mt-1 font-bold" />
                 </div>
-            </div>
 
-            <table class="w-full text-left">
-                <thead class="text-slate-500 border-b border-white/10">
+                <div class="flex flex-col">
+                    <InputText @bind-Value="nuevaCancionObj.Duracion" placeholder="00:00" class="bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 text-white outline-none focus:border-cyan-500 w-24 text-center transition-colors" />
+                    <ValidationMessage For="@(() => nuevaCancionObj.Duracion)" class="text-red-400 text-xs mt-1 font-bold" />
+                </div>
+
+                <button type="submit" class="bg-green-600 hover:bg-green-500 text-white font-bold px-6 py-2 rounded-lg transition h-[42px] shadow-lg shadow-green-900/20">
+                    Agregar
+                </button>
+            </EditForm>
+        </div>
+
+        <div class="bg-slate-900/30 rounded-2xl p-1 border border-white/5 overflow-hidden">
+            <table class="w-full text-left border-collapse">
+                <thead class="text-slate-500 bg-black/20 uppercase text-xs tracking-wider">
                     <tr>
-                        <th class="py-2">#</th>
-                        <th>Título</th>
-                        <th class="text-right">Duración</th>
-                        <th class="w-10"></th>
+                        <th class="py-4 px-4 font-medium text-center w-16">#</th>
+                        <th class="py-4 px-4 font-medium">Título</th>
+                        <th class="py-4 px-4 font-medium text-right w-32">Duración</th>
+                        <th class="w-24"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -52,39 +72,34 @@
                     {
                         @if (cancionEditandoId == cancion.Id)
                         {
-                            <tr class="bg-slate-800 border border-cyan-500">
-                                <td class="p-2 text-center text-cyan-400">✎</td>
-                                <td class="p-2">
-                                    <input @bind="cancion.Titulo"
-                                        class="bg-slate-900 text-white p-1 rounded w-full border border-slate-600" />
+                            <tr class="bg-slate-800 border-l-4 border-cyan-500 animate-in fade-in">
+                                <td class="p-3 text-center text-cyan-400 font-bold">✎</td>
+                                <td class="p-3">
+                                    <input @bind="cancion.Titulo" class="bg-slate-900 text-white p-2 rounded-lg w-full border border-slate-600 outline-none focus:border-cyan-500" />
                                 </td>
-                                <td class="p-2 text-right">
-                                    <input @bind="cancion.Duracion"
-                                        class="bg-slate-900 text-white p-1 rounded w-20 text-right border border-slate-600" />
+                                <td class="p-3 text-right">
+                                    <input @bind="cancion.Duracion" class="bg-slate-900 text-white p-2 rounded-lg w-full text-right border border-slate-600 outline-none focus:border-cyan-500" />
                                 </td>
-                                <td class="p-2 text-right flex gap-2 justify-end">
-                                    <button @onclick="() => GuardarCancion(cancion)"
-                                        class="text-green-500 hover:scale-110">💾</button>
-                                    <button @onclick="CancelarEdicion" class="text-gray-400 hover:scale-110">❌</button>
+                                <td class="p-3 text-right flex justify-end gap-2">
+                                    <button @onclick="() => GuardarCancion(cancion)" class="text-green-500 hover:scale-110 transition" title="Guardar">💾</button>
+                                    <button @onclick="CancelarEdicion" class="text-gray-400 hover:scale-110 transition" title="Cancelar">❌</button>
                                 </td>
                             </tr>
                         }
                         else
                         {
-                            <tr class="hover:bg-white/5 transition border-b border-white/5 group">
-                                <td class="py-3 text-slate-500 w-10 text-center">@index</td>
-                                <td class="font-medium">
+                            <tr class="hover:bg-white/5 transition border-b border-white/5 group last:border-none">
+                                <td class="py-4 px-4 text-slate-500 text-center font-mono text-sm">@index</td>
+                                <td class="py-4 px-4 font-medium text-slate-200 text-lg flex items-center gap-3">
                                     @cancion.Titulo
-                                    <button @onclick="() => EditarCancion(cancion.Id)"
-                                        class="ml-2 text-slate-600 hover:text-cyan-400 opacity-0 group-hover:opacity-100 transition">
+                                    <button @onclick="() => EditarCancion(cancion.Id)" class="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-cyan-400 transition p-1" title="Editar">
                                         ✏️
                                     </button>
                                 </td>
-                                <td class="text-right text-slate-400">@cancion.Duracion</td>
-                                <td class="text-right">
-                                    <button @onclick="() => EliminarCancion(cancion)"
-                                        class="text-red-500/50 hover:text-red-500 font-bold hover:scale-110 transition p-2">
-                                        ✕
+                                <td class="py-4 px-4 text-right text-slate-400 font-mono">@cancion.Duracion</td>
+                                <td class="py-4 px-4 text-right">
+                                    <button @onclick="() => EliminarCancion(cancion)" class="text-red-500/50 hover:text-red-500 font-bold hover:scale-110 transition p-2 opacity-0 group-hover:opacity-100" title="Borrar">
+                                        🗑️
                                     </button>
                                 </td>
                             </tr>
@@ -92,32 +107,26 @@
                     }
                 </tbody>
             </table>
+            
+            @if (disco.Canciones.Count == 0)
+            {
+                <div class="text-center p-12 text-slate-600 italic border-t border-white/5">
+                    Este álbum está vacío... ¡todavía! 🎵
+                </div>
+            }
         </div>
     }
 </div>
 
 @code {
     [Parameter] public int Id { get; set; }
-    escuchify_app.Models.Disco? disco;
-    string nuevaCancion = "";
-    string duracion = "";
+    
+    Disco? disco;
+    Cancion nuevaCancionObj = new();
+    
+    // Estado de Edición
     int? cancionEditandoId = null;
-    void EditarCancion(int id) => cancionEditandoId = id;
-    void CancelarEdicion() => cancionEditandoId = null;
 
-    void Volver()
-    {
-        // Si el disco sabe quién es su artista, volvemos a ÉL.
-        if (disco != null && disco.ArtistaId > 0)
-        {
-            NavManager.NavigateTo($"/artista/{disco.ArtistaId}");
-        }
-        else
-        {
-            // Solo si falla, vamos al inicio general
-            NavManager.NavigateTo("/artistas");
-        }
-    }
     protected override async Task OnInitializedAsync()
     {
         await Cargar();
@@ -128,26 +137,83 @@
         disco = await Api.ObtenerDiscoPorId(Id);
     }
 
+    // --- NAVEGACIÓN INTELIGENTE ---
+    void Volver()
+    {
+        if (disco != null && disco.ArtistaId > 0)
+        {
+            NavManager.NavigateTo($"/artista/{disco.ArtistaId}");
+        }
+        else
+        {
+            NavManager.NavigateTo("/artistas");
+        }
+    }
+
+    // --- AGREGAR ---
     async Task Agregar()
     {
-        if (string.IsNullOrEmpty(nuevaCancion)) return;
-        await Api.AgregarCancion(Id, new escuchify_app.Models.Cancion { Titulo = nuevaCancion, Duracion = duracion });
-        nuevaCancion = "";
-        duracion = "";
+        // ... (tu lógica de asignar genero y llamar a la API) ...
+        await Api.AgregarCancion(Id, nuevaCancionObj);
+        
+        // ... (tu lógica de limpiar variables) ...
         await Cargar();
+
+        // ¡NUEVO! Mensaje de éxito
+        await JS.InvokeVoidAsync("Swal.fire", new {
+            icon = "success",
+            title = "¡Agregada!",
+            text = $"Se añadió '{nuevaCancionObj.Titulo}' al disco.",
+            background = "#1e293b",
+            color = "#fff",
+            timer = 2000,
+            showConfirmButton = false
+        });
     }
+
+    // --- BORRAR ---
     async Task EliminarCancion(escuchify_app.Models.Cancion cancion)
     {
-        bool confirmado = await JS.InvokeAsync<bool>("confirm", $"¿Borrar '{cancion.Titulo}'?");
-        if (confirmado)
+        var resultado = await JS.InvokeAsync<SweetAlertResult>("Swal.fire", new 
+        {
+            title = "¿Borrar canción?",
+            text = $"Se eliminará '{cancion.Titulo}' permanentemente.",
+            icon = "question",
+            showCancelButton = true,
+            confirmButtonColor = "#d33",
+            confirmButtonText = "Borrar",
+            cancelButtonText = "Cancelar",
+            background = "#1e293b",
+            color = "#fff"
+        });
+
+        if (resultado.isConfirmed)
         {
             await Api.BorrarCancion(cancion.Id);
             await Cargar();
+            
+            // Alerta pequeña en la esquina (Toast)
+            await JS.InvokeVoidAsync("Swal.fire", new {
+                toast = true,
+                position = "top-end",
+                icon = "success",
+                title = "Canción eliminada",
+                showConfirmButton = false,
+                timer = 3000,
+                background = "#1e293b",
+                color = "#fff"
+            });
         }
     }
-    async Task GuardarCancion(escuchify_app.Models.Cancion cancion)
+
+    // --- EDITAR ---
+    void EditarCancion(int id) => cancionEditandoId = id;
+    void CancelarEdicion() => cancionEditandoId = null;
+
+    async Task GuardarCancion(Cancion cancion)
     {
         await Api.ActualizarCancion(cancion.Id, cancion);
         cancionEditandoId = null;
     }
+        public class SweetAlertResult { public bool isConfirmed { get; set; } }
 }

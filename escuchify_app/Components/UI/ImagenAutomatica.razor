@@ -118,12 +118,12 @@
 
     // Clases para leer el JSON de Deezer
     public class DeezerResult { 
-        public List<DeezerItem> data { get; set; } 
+        public List<DeezerItem> data { get; set; } = new();
     }
     public class DeezerItem { 
-        public string picture_xl { get; set; }     // Foto HD Artista
-        public string picture_medium { get; set; } // Foto SD Artista
-        public string cover_xl { get; set; }       // Portada HD Disco
-        public string cover_medium { get; set; }   // Portada SD Disco
+        public string picture_xl { get; set; } = string.Empty;
+        public string picture_medium { get; set; } = string.Empty;
+        public string cover_xl { get; set; } = string.Empty;
+        public string cover_medium { get; set; } = string.Empty;
     }
 }y

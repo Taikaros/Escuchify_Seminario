@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using escuchify_api.Services;
 using escuchify_api.DTOs;
+using escuchify_api.Data;
 
 namespace escuchify_api.Controllers;
 
@@ -9,6 +10,7 @@ namespace escuchify_api.Controllers;
 public class ArtistasController : ControllerBase
 {
     private readonly ArtistasService _service;
+
 
     // Inyectamos el servicio
     public ArtistasController(ArtistasService service)
@@ -25,6 +27,10 @@ public class ArtistasController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Post(ArtistaDto dto)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
         var creado = await _service.Crear(dto);
         return Ok(creado);
     }
@@ -55,5 +61,12 @@ public class ArtistasController : ControllerBase
 
         return NoContent();
     }
-
+[HttpGet("resumen")]
+    public async Task<ActionResult<ResumenDto>> GetResumen()
+    {
+        // CORRECCIÓN: Llamamos al método del servicio, no intentamos contar aquí
+        var resumen = await _service.ObtenerResumen();
+        
+        return Ok(resumen);
+    }
 }

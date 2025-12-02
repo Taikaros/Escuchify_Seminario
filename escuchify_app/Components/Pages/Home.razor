@@ -1,7 +1,46 @@
 ﻿@page "/"
+@inject escuchify_app.Services.ApiService Api
+@using escuchify_app.Models
 
-<PageTitle>Home</PageTitle>
+<div class="min-h-screen flex flex-col items-center justify-center text-center p-8">
+    
+    <div class="mb-10 animate-bounce-slow">
+        <h1 class="text-8xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 drop-shadow-2xl">
+            Escuchify
+        </h1>
+    </div>
 
-<h1>Hello, world!</h1>
+    <div class="grid grid-cols-3 gap-8 mb-16 w-full max-w-3xl">
+        <div class="bg-white/5 p-6 rounded-2xl border border-white/10 backdrop-blur-md shadow-lg hover:scale-105 transition">
+            <p class="text-5xl font-bold text-cyan-400">@resumen.CantidadArtistas</p>
+            <p class="text-sm text-slate-400 uppercase tracking-widest mt-2 font-bold">Artistas</p>
+        </div>
+        <div class="bg-white/5 p-6 rounded-2xl border border-white/10 backdrop-blur-md shadow-lg hover:scale-105 transition">
+            <p class="text-5xl font-bold text-purple-400">@resumen.CantidadDiscos</p>
+            <p class="text-sm text-slate-400 uppercase tracking-widest mt-2 font-bold">Discos</p>
+        </div>
+        <div class="bg-white/5 p-6 rounded-2xl border border-white/10 backdrop-blur-md shadow-lg hover:scale-105 transition">
+            <p class="text-5xl font-bold text-pink-400">@resumen.CantidadCanciones</p>
+            <p class="text-sm text-slate-400 uppercase tracking-widest mt-2 font-bold">Canciones</p>
+        </div>
+    </div>
 
-Welcome to your new app.
+    <div class="flex gap-6">
+        <a href="/artistas" class="bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-4 px-10 rounded-full text-xl shadow-lg shadow-cyan-500/30 transition-transform hover:scale-105">
+            🎵 Ir a mi Colección
+        </a>
+        
+        <a href="https://github.com/Taikaros/Escuchify_Seminario" target="_blank" class="bg-slate-800 hover:bg-slate-700 text-white py-4 px-10 rounded-full text-xl border border-white/10 transition-transform hover:scale-105 flex items-center gap-2">
+            📂 Ver Código
+        </a>
+    </div>
+</div>
+
+@code {
+    Resumen resumen = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        resumen = await Api.ObtenerResumen();
+    }
+}

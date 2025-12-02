@@ -19,7 +19,10 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<ArtistasService>();
 builder.Services.AddScoped<DiscosService>();
 
-// 4. Configuración Extra (Swagger, CORS)
+// 4. HttpClient para llamar a APIs externas (como Wikipedia)
+builder.Services.AddHttpClient();
+
+// 5. Configuración Extra (Swagger, CORS)
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddCors(option => {

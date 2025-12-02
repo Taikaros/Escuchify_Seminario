@@ -30,6 +30,10 @@
         </div>
 
     </div>
+    <div class="mb-8 relative">
+        <input @bind="busqueda" @bind:event="oninput" placeholder="🔍 Buscar artista o género..."
+            class="w-full bg-slate-800/50 text-white border border-white/10 rounded-xl px-5 py-3 outline-none focus:border-cyan-500 transition text-lg" />
+    </div>
 
     @if (artistas == null)
     {
@@ -45,7 +49,7 @@
     else
     {
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-8">
-            @foreach (var artista in artistas)
+            @foreach (var artista in ArtistasFiltrados)
             {
                 <div @key="artista.Id" class="relative group">
                     <button @onclick="() => Eliminar(artista)"
@@ -75,9 +79,15 @@
 </div>
 
 @code {
-    List<Artista> artistas;
+    List<Artista>? artistas;
     string nuevoNombre = "";
     string nuevoGenero = "";
+    string busqueda = "";
+    List<Artista> ArtistasFiltrados => artistas
+    .Where(a => a.Nombre.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
+    a.Genero.Contains(busqueda, StringComparison.OrdinalIgnoreCase))
+    .ToList();
+    escuchify_app.Models.Artista nuevoArtista = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -89,17 +99,42 @@
         artistas = await Api.ObtenerArtistas();
     }
 
-    async Task CrearArtista()
+async Task CrearArtista()
     {
-        if (string.IsNullOrWhiteSpace(nuevoNombre)) return;
+        // Asignamos los valores de los inputs al objeto
+        nuevoArtista.Nombre = nuevoNombre;
+        nuevoArtista.Genero = nuevoGenero;
 
-        // Enviamos a la API
-        await Api.CrearArtista(new Artista { Nombre = nuevoNombre, Genero = nuevoGenero });
+        var (exito, mensajeError) = await Api.CrearArtista(nuevoArtista);
 
-        // Limpiamos y recargamos
-        nuevoNombre = "";
-        nuevoGenero = "";
-        await CargarDatos();
+        if (exito)
+        {
+            await JS.InvokeVoidAsync("Swal.fire", new {
+                icon = "success",
+                title = "¡Guardado!",
+                text = $"Se agregó a {nuevoArtista.Nombre}",
+                background = "#1e293b",
+                color = "#fff",
+                timer = 2000,
+                showConfirmButton = false
+            });
+
+            // Limpiar y recargar
+            nuevoNombre = "";
+            nuevoGenero = "";
+            nuevoArtista = new escuchify_app.Models.Artista(); 
+            await CargarDatos();
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("Swal.fire", new {
+                icon = "error",
+                title = "Error de validación",
+                html = $"<pre class='text-left text-red-400 p-4 bg-red-900/20 rounded-lg'>{System.Text.Encodings.Web.HtmlEncoder.Default.Encode(mensajeError ?? "Error desconocido")}</pre>",
+                background = "#1e293b",
+                color = "#fff"
+            });
+        }
     }
     async Task Eliminar(Models.Artista artista)
     {

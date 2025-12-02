@@ -28,9 +28,28 @@ public class ApiService
         }
     }
 
-    public async Task CrearArtista(Artista artista)
+    public async Task<(bool Success, string? ErrorMessage)> CrearArtista(Artista artista)
     {
-        await _http.PostAsJsonAsync("api/artistas", artista);
+        // TRUCO DE LIMPIEZA: Creamos un objeto anónimo SIN EL ID
+        var datosLimpios = new 
+        {
+            Nombre = artista.Nombre,
+            Genero = artista.Genero,
+            ImagenUrl = artista.ImagenUrl,
+            Biografia = artista.Biografia
+        };
+
+        var response = await _http.PostAsJsonAsync("api/artistas", datosLimpios);
+        
+        if (response.IsSuccessStatusCode)
+        {
+            return (true, null);
+        }
+        else
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            return (false, errorContent);
+        }
     }
     public async Task<Artista?> ObtenerArtistaPorId(int id)
     {
@@ -96,7 +115,7 @@ public class ApiService
     public async Task ActualizarCancion(int id, escuchify_app.Models.Cancion cancion)
     {
         // TRUCO: Objeto limpio sin relaciones
-        var datosLimpios = new 
+        var datosLimpios = new
         {
             Id = cancion.Id,
             Titulo = cancion.Titulo,
@@ -106,5 +125,14 @@ public class ApiService
 
         // Asegúrate de que la ruta coincida con tu controlador (api/discos/cancion/{id})
         await _http.PutAsJsonAsync($"api/discos/cancion/{id}", datosLimpios);
+    }
+    public async Task<Resumen> ObtenerResumen()
+    {
+        try
+        {
+            var resumen = await _http.GetFromJsonAsync<Resumen>("api/artistas/resumen");
+            return resumen ?? new Resumen();
+        }
+        catch { return new Resumen(); }
     }
 }
