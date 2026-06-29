@@ -23,7 +23,7 @@
 
 Este proyecto satisface todos los requerimientos técnicos y funcionales planteados en la consigna del Seminario de Lenguajes II:
 
-### [cite_start]1. API RESTful (Backend) [cite: 10, 11, 12]
+### 1. API RESTful (Backend) [cite: 10, 11, 12]
 Se implementó el **CRUD Completo** para las 3 entidades solicitadas, persistiendo en **SQLite**:
 - [x] **Artistas:** Creación, Lectura, Edición y Eliminación (con borrado en cascada).
 - [x] **Discos:** Gestión completa vinculada al Artista.
